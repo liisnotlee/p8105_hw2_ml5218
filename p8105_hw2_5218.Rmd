@@ -17,7 +17,7 @@ library(tidyverse)
 Tidy `pols-month.csv`
 ```{r}
 pols = 
-  read_csv('fivethirtyeight_datasets/pols-month.csv') |> 
+  read_csv('data/fivethirtyeight_datasets/pols-month.csv') |> 
   janitor::clean_names() |> 
   # break up the variable mon into integer variables year, month, and day
   separate(
@@ -59,7 +59,7 @@ pols =
 Tidy `unemployment.csv`
 ```{r}
 unemployment = 
-  read_csv('fivethirtyeight_datasets/unemployment.csv') |> 
+  read_csv('data/fivethirtyeight_datasets/unemployment.csv') |> 
   janitor::clean_names() |>
   # tidy the data
   pivot_longer(
@@ -95,7 +95,7 @@ unemployment =
 Tidy `snp.csv`
 ```{r}
 snp = 
-  read_csv('fivethirtyeight_datasets/snp.csv') |> 
+  read_csv('data/fivethirtyeight_datasets/snp.csv') |> 
   janitor::clean_names() |> 
   # break up the variable mon into integer variables year, month, and day
   separate(
@@ -196,4 +196,8 @@ This dataset contains `r colSums(is.na(snp))` missing values in columns `r colna
 
 ### Merged dataset `result`
 `result` includes merged data from `unemployment` and `snp` into `pols`. Therefore, it contains information on political party representation, the closing values of the S&P stock index, and the percentage of unemployment, from January 1947 to June 2015 (same range as `pols`). It includes a total of `r nrow(result)` rows/observations and `r ncol(result)` columns/variables as described above. 
+
+
+# Problem 2
+
 
