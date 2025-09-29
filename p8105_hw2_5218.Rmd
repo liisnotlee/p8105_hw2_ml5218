@@ -1,0 +1,156 @@
+---
+title: "p8105_hw2_ml5218"
+author: "Muying Li"
+date: "2025-09-29"
+output: github_document
+---
+
+
+Load packages
+```{r}
+library(tidyverse)
+```
+
+# Problem 1
+
+## Loading & Cleaning Datasets 
+Tidy `pols-month.csv`
+```{r}
+pols = 
+  read_csv('fivethirtyeight_datasets/pols-month.csv') |> 
+  janitor::clean_names() |> 
+  # break up the variable mon into integer variables year, month, and day
+  separate(
+    mon, sep="-", into=c("year", "month", "day")
+  ) |> 
+  # convert into integer variables
+  mutate(
+    year = as.integer(year),
+    month = as.integer(month),
+    day = as.integer(day)
+  ) |> 
+  # replace month number with month name
+  mutate(
+    month = case_when(
+      month == 1 ~ "January",
+      month == 2 ~ "February",
+      month == 3 ~ "March",
+      month == 4 ~ "April",
+      month == 5 ~ "May",
+      month == 6 ~ "June",
+      month == 7 ~ "July",
+      month == 8 ~ "August",
+      month == 9 ~ "September",
+      month == 10 ~ "October",
+      month == 11 ~ "November",
+      month == 12 ~ "December"
+    )
+  ) |> 
+  # create a president variable taking values gop and dem
+  mutate(
+    president = case_when(
+      prez_gop > prez_dem ~ "gop",
+      prez_dem > prez_gop ~ "dem"
+    )
+  )|> 
+  # remove prez_dem and prez_gop, remove the day variable
+  select(-prez_dem, -prez_gop, -day) 
+#pols
+```
+Tidy `unemployment.csv`
+```{r}
+unemployment = 
+  read_csv('fivethirtyeight_datasets/unemployment.csv') |> 
+  janitor::clean_names() |>
+  # tidy the data
+  pivot_longer(
+    cols = jan:dec,
+    names_to = "month",
+    values_to = "unemployment_rate"
+  ) |> 
+  # convert year to integer
+  mutate(year = as.integer(year)) |> 
+  # replace month abbreviation with month name
+  mutate(
+    month = case_when(
+      month == "jan" ~ "January",
+      month == "feb" ~ "February",
+      month == "mar" ~ "March",
+      month == "apr" ~ "April",
+      month == "may" ~ "May",
+      month == "jun" ~ "June",
+      month == "jul" ~ "July",
+      month == "aug" ~ "August",
+      month == "sep" ~ "September",
+      month == "oct" ~ "October",
+      month == "nov" ~ "November",
+      month == "dec" ~ "December"
+    ),
+  ) |>
+  # arrange according to year and month
+  mutate(month = factor(month, levels = month.name)) |> 
+  arrange(year, month) |> 
+  # make year and month are the leading columns
+  relocate(year, month)
+#unemployment
+```
+Tidy `snp.csv`
+```{r}
+snp = 
+  read_csv('fivethirtyeight_datasets/snp.csv') |> 
+  janitor::clean_names() |> 
+  # break up the variable mon into integer variables year, month, and day
+  separate(
+    date, sep="/", into=c("month", "day", "year")
+  ) |> 
+  # convert into integer variables
+  mutate(
+    year = as.integer(year),
+    month = as.integer(month)
+  ) |> 
+  # replace month number with month name
+  mutate(
+    month = case_when(
+      month == 1 ~ "January",
+      month == 2 ~ "February",
+      month == 3 ~ "March",
+      month == 4 ~ "April",
+      month == 5 ~ "May",
+      month == 6 ~ "June",
+      month == 7 ~ "July",
+      month == 8 ~ "August",
+      month == 9 ~ "September",
+      month == 10 ~ "October",
+      month == 11 ~ "November",
+      month == 12 ~ "December"
+    )
+  ) |> 
+  # convert year to yyyy format
+  mutate(
+    year = case_when(
+      year <= 25 ~ year+2000,
+      year > 25 ~ year+1900
+    )
+  ) |> 
+  # arrange according to year and month
+  mutate(month = factor(month, levels = month.name)) |> 
+  arrange(year, month) |> 
+  # make year and month are the leading columns
+  relocate(year, month) |> 
+  # remove day 
+  select(-day)
+snp
+```
+
+Join the datasets by merging `snp` into `pols`, and merging `unemployment` into the result.
+```{r}
+result = 
+  left_join(pols, snp, by = c("year", "month")) |> 
+  left_join(unemployment, by = c("year", "month"))
+result
+```
+
+## Description about the Datasets
+
+*Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).*
+
