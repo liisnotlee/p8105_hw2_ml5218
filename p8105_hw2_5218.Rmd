@@ -55,7 +55,6 @@ pols =
   )|> 
   # remove prez_dem and prez_gop, remove the day variable
   select(-prez_dem, -prez_gop, -day) 
-#pols
 ```
 Tidy `unemployment.csv`
 ```{r}
@@ -92,7 +91,6 @@ unemployment =
   arrange(year, month) |> 
   # make year and month are the leading columns
   relocate(year, month)
-#unemployment
 ```
 Tidy `snp.csv`
 ```{r}
@@ -139,7 +137,6 @@ snp =
   relocate(year, month) |> 
   # remove day 
   select(-day)
-snp
 ```
 
 Join the datasets by merging `snp` into `pols`, and merging `unemployment` into the result.
@@ -151,6 +148,52 @@ result
 ```
 
 ## Description about the Datasets
+Basic summary
+```{r eval = FALSE}
+# dimensions of the dataset
+dim(result)
+# structure of the dataset
+str(result)
+# missing values
+colSums(is.na(result))
+# summary statistics
+summary(result)
+```
 
 *Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).*
+
+### `pols`
+`pols` (from `pols-month.csv`) contains `r nrow(pols)` observations of `r ncol(pols)` variables related to the number of national politicians who are democratic or republican in a specific month of the associated year from `r min(pols$year)` to `r max(pols$year)`:
+
+- `year`: year of the count on that row
+- `month`: month of the count on that row
+- `gov_gop`, `sen_gop`, `rep_gop`: the number of Republican Party representatives in government, Senate, and House, respectively on the associated month and year
+- `gov_dem`, `sen_dem`, `rep_dem`: the number of Democratic Party representatives in government, Senate, and House, respectively on the associated month and year
+- `president`: political affiliation of the U.S. president on the associated month and year (`dem` = democratic, `gop` = republican)
+
+This dataset contains `r colSums(is.na(pols))` missing values in columns `r colnames(pols)` respectively, indicating no missing values. 
+
+
+### `unemployment`
+`unemployment` (from `unemployment.csv`) contains `r nrow(unemployment)` observations of `r ncol(unemployment)` variables related to percentage of unemployment in a specific month of the associated year from `r min(unemployment$year)` to `r max(unemployment$year)`:
+
+- `year`: year of the measurements on that row
+- `month`: month of the count on that row
+- `unemployment_rate`: percentage of unemployment of the associated year and month
+
+However, this dataset contains `r colSums(is.na(unemployment))` missing values in columns `r colnames(unemployment)` respectively, corresponding to no records of unemployment rate from July 2015 to December 2015. 
+
+
+### `snp`
+`snp` (from `snp.csv`) contains `r nrow(snp)` observations of `r ncol(snp)` variables related to  Standard & Poor’s stock market index (S&P) in a specific month of the associated year from `r min(snp$year)` to `r max(snp$year)`:
+
+- `year`: year of the measurements on that row
+- `month`: month of the measurements on that row
+- `close`: the closing values of the S&P stock index on the associated year and month
+
+This dataset contains `r colSums(is.na(snp))` missing values in columns `r colnames(snp)` respectively, indicating no missing values. 
+
+
+### Merged dataset `result`
+`result` includes merged data from `unemployment` and `snp` into `pols`. Therefore, it contains information on political party representation, the closing values of the S&P stock index, and the percentage of unemployment, from January 1947 to June 2015 (same range as `pols`). It includes a total of `r nrow(result)` rows/observations and `r ncol(result)` columns/variables as described above. 
 
