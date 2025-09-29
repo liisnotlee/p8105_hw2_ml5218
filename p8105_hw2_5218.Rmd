@@ -9,11 +9,12 @@ output: github_document
 Load packages
 ```{r}
 library(tidyverse)
+library(readxl)
 ```
 
 # Problem 1
 
-## Loading & Cleaning Datasets 
+## Data Wrangling
 Tidy `pols-month.csv`
 ```{r}
 pols = 
@@ -200,4 +201,186 @@ This dataset contains `r colSums(is.na(snp))` missing values in columns `r colna
 
 # Problem 2
 
+## Data Wrangling
+Mr. Trash Wheel
+```{r}
+mr_trash = 
+  read_excel(
+    "data/202409 Trash Wheel Collection Data.xlsx", 
+    sheet = "Mr. Trash Wheel",
+    range = "A2:N653"
+    ) |> 
+  janitor::clean_names() |> 
+  # no need date
+  select(-date) |> 
+  # add name of the wheel
+  mutate(
+    wheel = "mr"
+  ) |> 
+  # round sports balls to the nearest integer and converts the result to an integer variable 
+  mutate(sports_balls = as.integer(round(sports_balls))) |> 
+  # pivot the data longer for types of trash
+  pivot_longer(
+    cols = plastic_bottles:sports_balls,
+    names_to = "trash_type",
+    values_to = "count"
+  ) |> 
+  # pivot the data longer for weight and volume 
+  pivot_longer(
+    cols = weight_tons:volume_cubic_yards,
+    names_to = "measurement_type",
+    values_to = "value"
+  ) |> 
+  # move homes to the last column 
+  relocate(homes_powered, .after = last_col()) |> 
+  # convert year and month to integer and factor
+  mutate(
+    month = str_to_title(month),
+    month = factor(month, levels = month.name),
+    year = as.integer(year)
+  )
+mr_trash
+filter(mr_trash, is.na(year) | is.na(month))
+```
+Professor Trash Wheel 
+```{r}
+prof_trash = 
+  read_excel(
+    "data/202409 Trash Wheel Collection Data.xlsx", 
+    sheet = "Professor Trash Wheel",
+    range = "A2:M121"
+    ) |> 
+  janitor::clean_names() |> 
+  # no need date
+  select(-date) |> 
+  # add name of the wheel
+  mutate(
+    wheel = "prof"
+  ) |> 
+  # pivot the data longer for types of trash
+  pivot_longer(
+    cols = plastic_bottles:wrappers,
+    names_to = "trash_type",
+    values_to = "count"
+  ) |> 
+  # pivot the data longer for weight and volume 
+  pivot_longer(
+    cols = weight_tons:volume_cubic_yards,
+    names_to = "measurement_type",
+    values_to = "value"
+  ) |> 
+  # move homes to the last column 
+  relocate(homes_powered, .after = last_col()) |> 
+  # convert year and month to integer and factor
+  mutate(
+    month = str_to_title(month),
+    month = factor(month, levels = month.name),
+    year = as.integer(year)
+  ) |> 
+  # only keep non-empty rows
+  filter(!is.na(year))
 
+prof_trash
+```
+
+Gwynnda
+```{r}
+gwy_trash = 
+  read_excel(
+    "data/202409 Trash Wheel Collection Data.xlsx", 
+    sheet = "Gwynnda Trash Wheel",
+    range = "A2:L265"
+    ) |> 
+  janitor::clean_names() |> 
+  # no need date
+  select(-date) |> 
+  # add name of the wheel
+  mutate(
+    wheel = "gwy"
+  ) |> 
+  # pivot the data longer for types of trash
+  pivot_longer(
+    cols = plastic_bottles:wrappers,
+    names_to = "trash_type",
+    values_to = "count"
+  ) |> 
+  # pivot the data longer for weight and volume 
+  pivot_longer(
+    cols = weight_tons:volume_cubic_yards,
+    names_to = "measurement_type",
+    values_to = "value"
+  ) |> 
+  # move homes to the last column 
+  relocate(homes_powered, .after = last_col()) |> 
+  # convert year and month to integer and factor
+  mutate(
+    month = str_to_title(month),
+    month = factor(month, levels = month.name),
+    year = as.integer(year)
+  )
+gwy_trash
+```
+
+Combine this with the 3 wheel datasets 
+```{r}
+wheels = 
+  bind_rows(mr_trash, prof_trash, gwy_trash) |> 
+  # move wheel, year, month as leading columns 
+  relocate(wheel, year, month)
+```
+
+
+## Description about `wheels` 
+*Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables.*
+
+The `wheels` contains trash collection data of 3 wheels: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda Trash Wheel, from `r min(wheels$year)` to `r max(wheels$year)`. It includes a total of `r nrow(wheels)` observations of `r ncol(wheels)` variables. Each row/observation indicates the trash collection information of a specific wheel's dumpster in a month and a year such as amount of total litter and litter type, and number of homes powered by the trash collected.
+
+Key variables include:
+
+- `wheel`: wheel identifier indicating which wheel the trash was collected from (`mr` = Mr. Trash, `prof` = Professor, `gwy` = Gwynnda)
+- `year`: year the data was collected
+- `month`: month the data was collected
+- `dumpster`: dumpster number (in integer, starting from 1)
+- `trash_type`: type of trash collected, including `plastic_bottles`, `polystyrene`, `cigarette_butts`, `glass_bottles`, `plastic_bags`, `wrappers`, `sports_balls`
+- `count`: counts of how many of a specific trash type was collected (in integer)
+- `measurement_type`: type of measurement of total trash collected (such as weight in tons (`weight_tons`) or volume in cubic yards (`volume_cubic_yards`))
+- `value`: numeric value of a specific measurement type of total trash collected
+
+
+*What was the total weight of trash collected by Professor Trash Wheel?*
+```{r}
+prof_total_weight = 
+  filter(
+    wheels, 
+    wheel == "prof", 
+    measurement_type == "weight_tons"
+  ) |> 
+  select(value) |> 
+  sum()
+```
+The total weight of trash collected by Professor Trash Wheel is `r prof_total_weight` tons. 
+
+*What was the total number of cigarette butts collected by Gwynnda in June of 2022?*
+```{r}
+gwy_jun22_cig = 
+  filter(
+    wheels, 
+    wheel == "gwy", 
+    trash_type == "cigarette_butts",
+    year == 2022,
+    month == "June"
+  ) |> 
+  select(count) |> 
+  sum()
+```
+The total number of cigarette butts collected by Gwynnda in June of 2022 is `r gwy_jun22_cig`.
+
+# Problem 3
+## Data Wrangling
+
+
+
+
+# Question
+1. no dumpster
+2. left_join prob1?
